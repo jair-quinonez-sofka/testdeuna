@@ -27,12 +27,9 @@ export class ProductService implements IProductService {
   async createProduct(createProductDto: CreateProductDTO) {
     try {
       const newProduct = this.productRepository.create(createProductDto);
-
       await this.productRepository.save(newProduct);
-
       
       this.kafkaService.publishMessage('product-created', JSON.stringify(newProduct));
-      
       return {
         id: newProduct.id,
         name: newProduct.name,
