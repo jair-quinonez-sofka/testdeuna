@@ -43,7 +43,7 @@ Este método inicia **todos** los servicios en contenedores Docker, ideal para e
 
 ```bash
 # Clonar el repositorio
-git clone 
+git clone https://github.com/jair-quinonez-sofka/testdeuna
 cd testdeuna
 
 # Configurar variables de entorno
@@ -75,7 +75,7 @@ Este método inicia solo los servicios de infraestructura en Docker, mientras qu
 
 ```bash
 # Clonar el repositorio e instalar dependencias
-git 
+git clone https://github.com/jair-quinonez-sofka/testdeuna
 cd testdeuna/api-product-manager
 npm install
 
