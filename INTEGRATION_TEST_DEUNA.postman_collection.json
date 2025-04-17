@@ -1,0 +1,219 @@
+{
+	"info": {
+		"_postman_id": "030b625b-ead5-4cb8-aeb6-22d091677b34",
+		"name": "INTEGRATION_TEST_DEUNA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40402952"
+	},
+	"item": [
+		{
+			"name": "CREATE_PRODUCT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"\r",
+							"var jsonData = pm.response.json()\r",
+							"pm.environment.set(\"product_id\", jsonData.data.createProduct.id);\r",
+							"\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Product create successfuly\", function () {\r",
+							"    pm.expect(jsonData.data.createProduct.name).to.eql(pm.environment.get('PRODUCT_TEST_NAME'));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation ($createProductInput: CreateProductInput!) {\r\n  createProduct(createProductInput: $createProductInput) {\r\n    description\r\n    id\r\n    name\r\n    \r\n  }\r\n}",
+						"variables": "{\r\n  \"createProductInput\": {\r\n    \"name\": \"{{PRODUCT_TEST_NAME}}\",\r\n    \"description\": \"This is my description about this thing\",\r\n    \"stock\": 25,\r\n    \"price\": 99.99\r\n  }\r\n}"
+					}
+				},
+				"url": {
+					"raw": "{{BFF_URL}}",
+					"host": [
+						"{{BFF_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET_PRODUCTS_10-0",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json()\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Service retrieve only 10 products\", function () {\r",
+							"    pm.expect(jsonData.data.getProducts.size).to.eql(10);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query GetProducts($limit: Int, $offset: Int) {\r\n  getProducts(limit: $limit, offset: $offset) {\r\n    size\r\n    products {\r\n      description\r\n      name\r\n      id\r\n    }\r\n  }\r\n}",
+						"variables": "{\r\n  \"limit\": 10,\r\n  \"offset\": 0\r\n}"
+					}
+				},
+				"url": {
+					"raw": "{{BFF_URL}}",
+					"host": [
+						"{{BFF_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET_ALL_PRODUCTS",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json()\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Service retrieve more than one product\", function () {\r",
+							"    pm.expect(jsonData.data.getProducts.size).to.greaterThanOrEqual(1);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query{\r\n  getProducts{\r\n    size\r\n    products {\r\n      description\r\n      name\r\n      id\r\n    }\r\n  }\r\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "{{BFF_URL}}",
+					"host": [
+						"{{BFF_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPDATE_PRODUCT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json()\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Service update the product and set name NEW_PRODUCT  and price 12.63\", function () {\r",
+							"    pm.expect(jsonData.data.updateProduct.price).to.eql(12.63);\r",
+							"    pm.expect(jsonData.data.updateProduct.name).to.eql(\"NEW_PRODUCT\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation UpdateProduct($updateProductInput: UpdateProductInput!) {\r\n  updateProduct(updateProductInput: $updateProductInput){\r\n    id\r\n    description\r\n    stock\r\n    price\r\n    name\r\n  }\r\n}",
+						"variables": "{\r\n  \"updateProductInput\": {\r\n    \"id\": \"{{product_id}}\",\r\n    \"price\": 12.63,\r\n    \"name\":\"NEW_PRODUCT\",\r\n    \"stock\": 6\r\n  }\r\n}"
+					}
+				},
+				"url": {
+					"raw": "{{BFF_URL}}",
+					"host": [
+						"{{BFF_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE_PRODUCT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json()\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Service delete a product and return a message with the name\", function () {\r",
+							"    pm.expect(jsonData.data.removeProduct).to.include(\"NEW_PRODUCT\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation RemoveProduct($removeProductInput: RemoveProductInput!) {\r\n  removeProduct(removeProductInput: $removeProductInput)\r\n}",
+						"variables": "{\r\n  \"removeProductInput\": {\r\n    \"id\": \"{{product_id}}\"\r\n  }\r\n}"
+					}
+				},
+				"url": {
+					"raw": "{{BFF_URL}}",
+					"host": [
+						"{{BFF_URL}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

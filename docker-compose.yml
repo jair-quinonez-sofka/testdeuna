@@ -1,0 +1,102 @@
+version: '4.1'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    networks:
+      - broker-kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    networks:
+      - broker-kafka
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    networks:
+      - broker-kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    networks:
+      - broker-kafka
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
+    depends_on:
+      - kafka
+
+  redis:
+    image: redis:7.2
+    container_name: redis-cache
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - broker-kafka
+
+  api-product-manager:
+    build:
+      context: ./api-product-manager
+      dockerfile: Dockerfile
+    container_name: api-service
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      - REDIS_HOST=redis
+      - KAFKA_BROKER=kafka:29092
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - kafka
+    networks:
+      - broker-kafka
+
+  bff-product-manager:
+    build:
+      context: ./bff-product-manager
+      dockerfile: Dockerfile
+    container_name: bff-service
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://api-product-manager:3000
+    depends_on:
+      - api-product-manager
+    networks:
+      - broker-kafka
+
+networks:
+  broker-kafka:
+    driver: bridge
